@@ -23,7 +23,15 @@ echo "# SSH chain"
 iptables -N SSH
 iptables -A SSH -j ACCEPT
 
-echo "# configure chains to accept WWW traffic"
+echo "# configure chains to enable web hosting"
+
+echo "# INPUT chain"
+iptables -A INPUT -p tcp -m multiport --dport 80,443 -m multiport --sport 1024:65535 -j WWW
+
+echo "# OUTPUT chain"
+iptables -A OUTPUT -p tcp -m multiport --sport 80,443 -m multiport --dport 1024:65535 -j WWW
+
+echo "# configure chains to enable web browsing"
 
 echo "# INPUT chain"
 iptables -A INPUT -i lo -p udp -m multiport --dport 53 -j WWW
@@ -40,9 +48,9 @@ iptables -A OUTPUT -p icmp -j WWW
 echo "# configure chains to accept SSH traffic"
 
 echo "# INPUT chain"
-iptables -A INPUT -p tcp -m multiport --sport 22 -j SSH
-iptables -A INPUT -p udp -m multiport --sport 22 -j SSH
+iptables -A INPUT -p tcp -m multiport --sport 22 -j SSH # test
+iptables -A INPUT -p udp -m multiport --sport 22 -j SSH # test
 
 echo "# OUTPUT chain"
-iptables -A OUTPUT -p tcp -m multiport --dport 22 -j SSH
-iptables -A OUTPUT -p udp -m multiport --dport 22 -j SSH
+iptables -A OUTPUT -p tcp -m multiport --dport 22 -j SSH # test
+iptables -A OUTPUT -p udp -m multiport --dport 22 -j SSH # test
