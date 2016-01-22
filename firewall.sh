@@ -1,6 +1,16 @@
 
 echo "### configuration below ###"
 
+# allowed local SSH server ports to enable remote access to
+LOCAL_SSH_SERVERS="22"
+# allowed inbound SSH client ports
+INBOUND_SSH_CLIENTS="513:65535"
+
+# allowed remote SSH server ports to enable access to
+REMOTE_SSH_SERVERS="22"
+# allowed outbound SSH client ports
+OUTBOUND_SSH_CLIENTS="513:65535"
+
 echo "### code below - do not touch! ###"
 
 echo "# reset firewall"
@@ -60,13 +70,9 @@ iptables -A OUTPUT -p tcp -m multiport --dport 80,443 -j WWW_CLNT
 iptables -A OUTPUT -p icmp -j WWW_CLNT
 
 echo "# enable connections to local SSH server"
-
-iptables -A INPUT -p tcp -m multiport --dport 22 -j SSH
-
-iptables -A OUTPUT -p tcp -m multiport --sport 22 -j SSH
+iptables -A INPUT  -p tcp -m multiport --dport $LOCAL_SSH_SERVERS -m multiport --sport $INBOUND_SSH_CLIENTS --tcp-flags NONE NONE -j SSH # test
+iptables -A OUTPUT -p tcp -m multiport --sport $LOCAL_SSH_SERVERS -m multiport --dport $INBOUND_SSH_CLIENTS --tcp-flags ALL  ACK  -j SSH # test
 
 echo "# enable connections to remote SSH servers"
-
-iptables -A INPUT -p tcp -m multiport --sport 22 -j SSH
-
-iptables -A OUTPUT -p tcp -m multiport --dport 22 -j SSH
+iptables -A INPUT  -p tcp -m multiport --sport $REMOTE_SSH_SERVERS -m multiport --dport $OUTBOUND_SSH_CLIENTS --tcp-flags ALL  ACK  -j SSH # test
+iptables -A OUTPUT -p tcp -m multiport --dport $REMOTE_SSH_SERVERS -m multiport --sport $OUTBOUND_SSH_CLIENTS --tcp-flags NONE NONE -j SSH # test
