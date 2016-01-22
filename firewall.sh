@@ -31,6 +31,14 @@ echo "# DHCP chain"
 iptables -N DHCP
 iptables -A DHCP -j ACCEPT
 
+echo "# enable DNS"
+
+iptables -A INPUT -i lo -p udp -m multiport --dport 53 -j WWW_CLNT
+iptables -A INPUT -p udp -m multiport --sport 53 -j WWW_CLNT
+
+iptables -A OUTPUT -o lo -p udp -m multiport --sport 53 -j WWW_CLNT
+iptables -A OUTPUT -p udp -m multiport --dport 53 -j WWW_CLNT
+
 echo "# enable DHCP"
 
 iptables -A INPUT -p udp -m multiport --dport 67,68 -j DHCP # test
@@ -45,14 +53,10 @@ iptables -A OUTPUT -p tcp -m multiport --sport 80,443 -m multiport --dport 1024:
 
 echo "# enable web browsing"
 
-iptables -A INPUT -i lo -p udp -m multiport --dport 53 -j WWW_CLNT
 iptables -A INPUT -p tcp -m multiport --sport 80,443 -j WWW_CLNT
-iptables -A INPUT -p udp -m multiport --sport 53 -j WWW_CLNT
 iptables -A INPUT -p icmp -j WWW_CLNT
 
-iptables -A OUTPUT -o lo -p udp -m multiport --sport 53 -j WWW_CLNT
 iptables -A OUTPUT -p tcp -m multiport --dport 80,443 -j WWW_CLNT
-iptables -A OUTPUT -p udp -m multiport --dport 53 -j WWW_CLNT
 iptables -A OUTPUT -p icmp -j WWW_CLNT
 
 echo "# enable connections to local SSH server"
