@@ -1,6 +1,16 @@
 
 echo "### configuration below ###"
 
+# allowed local WWW server ports to enable remote access to
+LOCAL_WWW_SERVERS="80,443"
+# allowed inbound WWW client ports
+INBOUND_WWW_CLIENTS="1024:65535"
+
+# allowed remote WWW server ports to enable access to
+REMOTE_WWW_SERVERS="80,443"
+# allowed outbound WWW client ports
+OUTBOUND_WWW_CLIENTS="1024:65535"
+
 # allowed local SSH server ports to enable remote access to
 LOCAL_SSH_SERVERS="22"
 # allowed inbound SSH client ports
@@ -58,12 +68,12 @@ iptables -A INPUT -p icmp -j WWW_CLNT
 iptables -A OUTPUT -p icmp -j WWW_CLNT
 
 echo "# enable web hosting"
-iptables -A INPUT -p tcp -m multiport --dport 80,443 -m multiport --sport 1024:65535 -j WWW_SVR
-iptables -A OUTPUT -p tcp -m multiport --sport 80,443 -m multiport --dport 1024:65535 -j WWW_SVR
+iptables -A INPUT  -p tcp -m multiport --dport $LOCAL_WWW_SERVERS -m multiport --sport $INBOUND_WWW_CLIENTS -j WWW_SVR
+iptables -A OUTPUT -p tcp -m multiport --sport $LOCAL_WWW_SERVERS -m multiport --dport $INBOUND_WWW_CLIENTS -j WWW_SVR
 
 echo "# enable web browsing"
-iptables -A INPUT -p tcp -m multiport --sport 80,443 -j WWW_CLNT
-iptables -A OUTPUT -p tcp -m multiport --dport 80,443 -j WWW_CLNT
+iptables -A INPUT  -p tcp -m multiport --sport $REMOTE_WWW_SERVERS -m multiport --dport $OUTBOUND_WWW_CLIENTS -j WWW_CLNT
+iptables -A OUTPUT -p tcp -m multiport --dport $REMOTE_WWW_SERVERS -m multiport --sport $OUTBOUND_WWW_CLIENTS -j WWW_CLNT
 
 echo "# enable connections to local SSH server"
 iptables -A INPUT  -p tcp -m multiport --dport $LOCAL_SSH_SERVERS -m multiport --sport $INBOUND_SSH_CLIENTS --tcp-flags NONE NONE -j SSH # test
