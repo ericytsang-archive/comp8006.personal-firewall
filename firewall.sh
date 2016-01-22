@@ -110,7 +110,7 @@ iptables -A INPUT -p udp \
     -d $HOST_ADDRESS -m multiport --dport 68 \
     -j DHCP
 
-echo "# enable remote DNS"
+echo "# enable DNS"
 iptables -A INPUT -p udp \
     -s $DNS_SERVER_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
     -d $HOST_ADDRESS -m multiport --dport $USER_PORTS \
@@ -126,24 +126,6 @@ iptables -A OUTPUT -p udp \
 iptables -A OUTPUT -p tcp \
     -s $HOST_ADDRESS -m multiport --sport $USER_PORTS \
     -d $DNS_SERVER_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
-    -j DNS
-
-echo "# enable local DNS"
-iptables -A INPUT -i $LOOPBACK -p udp \
-    -s $LOCALHOST_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
-    -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
-     -j DNS
-iptables -A INPUT -i $LOOPBACK -p tcp \
-    -s $LOCALHOST_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
-    -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
-     -j DNS
-iptables -A OUTPUT -o $LOOPBACK -p udp \
-    -s $LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
-    -d $LOCALHOST_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
-    -j DNS
-iptables -A OUTPUT -o $LOOPBACK -p tcp \
-    -s $LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
-    -d $LOCALHOST_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
     -j DNS
 
 echo "# enable SSH server"
