@@ -31,31 +31,25 @@ echo "# DHCP chain"
 iptables -N DHCP
 iptables -A DHCP -j ACCEPT
 
-echo "# configure chains to enable DHCP"
+echo "# enable DHCP"
 
-echo "# INPUT chain"
 iptables -A INPUT -p udp -m multiport --dport 67,68 -j DHCP # test
 
-echo "# OUTPUT chain"
 iptables -A OUTPUT -p udp -m multiport --sport 67,68 -j DHCP # test
 
-echo "# configure chains to enable web hosting"
+echo "# enable web hosting"
 
-echo "# INPUT chain"
 iptables -A INPUT -p tcp -m multiport --dport 80,443 -m multiport --sport 1024:65535 -j WWW_SVR
 
-echo "# OUTPUT chain"
 iptables -A OUTPUT -p tcp -m multiport --sport 80,443 -m multiport --dport 1024:65535 -j WWW_SVR
 
-echo "# configure chains to enable web browsing"
+echo "# enable web browsing"
 
-echo "# INPUT chain"
 iptables -A INPUT -i lo -p udp -m multiport --dport 53 -j WWW_CLNT
 iptables -A INPUT -p tcp -m multiport --sport 80,443 -j WWW_CLNT
 iptables -A INPUT -p udp -m multiport --sport 53 -j WWW_CLNT
 iptables -A INPUT -p icmp -j WWW_CLNT
 
-echo "# OUTPUT chain"
 iptables -A OUTPUT -o lo -p udp -m multiport --sport 53 -j WWW_CLNT
 iptables -A OUTPUT -p tcp -m multiport --dport 80,443 -j WWW_CLNT
 iptables -A OUTPUT -p udp -m multiport --dport 53 -j WWW_CLNT
