@@ -15,43 +15,51 @@ iptables -P INPUT DROP
 iptables -P OUTPUT DROP
 iptables -P FORWARD DROP
 
-echo "# WWW chain"
-iptables -N WWW
-iptables -A WWW -j ACCEPT
+echo "# WWW_CLIENT chain"
+iptables -N WWW_CLIENT
+iptables -A WWW_CLIENT -j ACCEPT
+
+echo "# WWW_SERVER chain"
+iptables -N WWW_SERVER
+iptables -A WWW_SERVER -j ACCEPT
 
 echo "# SSH chain"
 iptables -N SSH
 iptables -A SSH -j ACCEPT
 
+echo "# DHCP chain"
+iptables -N DHCP
+iptables -A DHCP -j ACCEPT
+
 echo "# configure chains to enable DHCP"
 
 echo "# INPUT chain"
-iptables -A INPUT -p udp -m multiport --dport 67,68 -j ACCEPT # test
+iptables -A INPUT -p udp -m multiport --dport 67,68 -j DHCP # test
 
 echo "# OUTPUT chain"
-iptables -A OUTPUT -p udp -m multiport --sport 67,68 -j ACCEPT # test
+iptables -A OUTPUT -p udp -m multiport --sport 67,68 -j DHCP # test
 
 echo "# configure chains to enable web hosting"
 
 echo "# INPUT chain"
-iptables -A INPUT -p tcp -m multiport --dport 80,443 -m multiport --sport 1024:65535 -j WWW # test
+iptables -A INPUT -p tcp -m multiport --dport 80,443 -m multiport --sport 1024:65535 -j WWW_SERVER
 
 echo "# OUTPUT chain"
-iptables -A OUTPUT -p tcp -m multiport --sport 80,443 -m multiport --dport 1024:65535 -j WWW # test
+iptables -A OUTPUT -p tcp -m multiport --sport 80,443 -m multiport --dport 1024:65535 -j WWW_SERVER
 
 echo "# configure chains to enable web browsing"
 
 echo "# INPUT chain"
-iptables -A INPUT -i lo -p udp -m multiport --dport 53 -j WWW
-iptables -A INPUT -p tcp -m multiport --sport 80,443 -j WWW
-iptables -A INPUT -p udp -m multiport --sport 53 -j WWW
-iptables -A INPUT -p icmp -j WWW
+iptables -A INPUT -i lo -p udp -m multiport --dport 53 -j WWW_CLIENT
+iptables -A INPUT -p tcp -m multiport --sport 80,443 -j WWW_CLIENT
+iptables -A INPUT -p udp -m multiport --sport 53 -j WWW_CLIENT
+iptables -A INPUT -p icmp -j WWW_CLIENT
 
 echo "# OUTPUT chain"
-iptables -A OUTPUT -o lo -p udp -m multiport --sport 53 -j WWW
-iptables -A OUTPUT -p tcp -m multiport --dport 80,443 -j WWW
-iptables -A OUTPUT -p udp -m multiport --dport 53 -j WWW
-iptables -A OUTPUT -p icmp -j WWW
+iptables -A OUTPUT -o lo -p udp -m multiport --sport 53 -j WWW_CLIENT
+iptables -A OUTPUT -p tcp -m multiport --dport 80,443 -j WWW_CLIENT
+iptables -A OUTPUT -p udp -m multiport --dport 53 -j WWW_CLIENT
+iptables -A OUTPUT -p icmp -j WWW_CLIENT
 
 echo "# configure chains to accept SSH traffic"
 
