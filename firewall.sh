@@ -51,13 +51,17 @@ echo "# DHCP chain"
 iptables -N DHCP
 iptables -A DHCP -j ACCEPT
 
+echo "# DNS chain"
+iptables -N DNS
+iptables -A DNS -j ACCEPT
+
 echo "# enable DNS"
 
-iptables -A INPUT -i lo -p udp -m multiport --dport 53 -j WWW_CLNT
-iptables -A INPUT -p udp -m multiport --sport 53 -j WWW_CLNT
+iptables -A INPUT -i lo -p udp -m multiport --dport 53 -j DNS
+iptables -A INPUT -p udp -m multiport --sport 53 -j DNS
 
-iptables -A OUTPUT -o lo -p udp -m multiport --sport 53 -j WWW_CLNT
-iptables -A OUTPUT -p udp -m multiport --dport 53 -j WWW_CLNT
+iptables -A OUTPUT -o lo -p udp -m multiport --sport 53 -j DNS
+iptables -A OUTPUT -p udp -m multiport --dport 53 -j DNS
 
 echo "# enable DHCP"
 iptables -A INPUT -p udp -m multiport --dport 67,68 -j DHCP # test
