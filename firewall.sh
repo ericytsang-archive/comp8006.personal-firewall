@@ -15,13 +15,13 @@ iptables -P INPUT DROP
 iptables -P OUTPUT DROP
 iptables -P FORWARD DROP
 
-echo "# WWW_CLIENT chain"
-iptables -N WWW_CLIENT
-iptables -A WWW_CLIENT -j ACCEPT
+echo "# WWW_CLNT chain"
+iptables -N WWW_CLNT
+iptables -A WWW_CLNT -j ACCEPT
 
-echo "# WWW_SERVER chain"
-iptables -N WWW_SERVER
-iptables -A WWW_SERVER -j ACCEPT
+echo "# WWW_SVR chain"
+iptables -N WWW_SVR
+iptables -A WWW_SVR -j ACCEPT
 
 echo "# SSH chain"
 iptables -N SSH
@@ -42,24 +42,24 @@ iptables -A OUTPUT -p udp -m multiport --sport 67,68 -j DHCP # test
 echo "# configure chains to enable web hosting"
 
 echo "# INPUT chain"
-iptables -A INPUT -p tcp -m multiport --dport 80,443 -m multiport --sport 1024:65535 -j WWW_SERVER
+iptables -A INPUT -p tcp -m multiport --dport 80,443 -m multiport --sport 1024:65535 -j WWW_SVR
 
 echo "# OUTPUT chain"
-iptables -A OUTPUT -p tcp -m multiport --sport 80,443 -m multiport --dport 1024:65535 -j WWW_SERVER
+iptables -A OUTPUT -p tcp -m multiport --sport 80,443 -m multiport --dport 1024:65535 -j WWW_SVR
 
 echo "# configure chains to enable web browsing"
 
 echo "# INPUT chain"
-iptables -A INPUT -i lo -p udp -m multiport --dport 53 -j WWW_CLIENT
-iptables -A INPUT -p tcp -m multiport --sport 80,443 -j WWW_CLIENT
-iptables -A INPUT -p udp -m multiport --sport 53 -j WWW_CLIENT
-iptables -A INPUT -p icmp -j WWW_CLIENT
+iptables -A INPUT -i lo -p udp -m multiport --dport 53 -j WWW_CLNT
+iptables -A INPUT -p tcp -m multiport --sport 80,443 -j WWW_CLNT
+iptables -A INPUT -p udp -m multiport --sport 53 -j WWW_CLNT
+iptables -A INPUT -p icmp -j WWW_CLNT
 
 echo "# OUTPUT chain"
-iptables -A OUTPUT -o lo -p udp -m multiport --sport 53 -j WWW_CLIENT
-iptables -A OUTPUT -p tcp -m multiport --dport 80,443 -j WWW_CLIENT
-iptables -A OUTPUT -p udp -m multiport --dport 53 -j WWW_CLIENT
-iptables -A OUTPUT -p icmp -j WWW_CLIENT
+iptables -A OUTPUT -o lo -p udp -m multiport --sport 53 -j WWW_CLNT
+iptables -A OUTPUT -p tcp -m multiport --dport 80,443 -j WWW_CLNT
+iptables -A OUTPUT -p udp -m multiport --dport 53 -j WWW_CLNT
+iptables -A OUTPUT -p icmp -j WWW_CLNT
 
 echo "# configure chains to accept SSH traffic"
 
