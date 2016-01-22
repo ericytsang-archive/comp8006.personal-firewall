@@ -1,7 +1,18 @@
 
 echo "### configuration below ###"
 
-# custom chain targets
+# addresses
+ANY_ADDRESS="0.0.0.0/0"
+HOST_ADDRESS="192.168.1.76"
+LOCALHOST_ADDRESS="127.0.0.1"
+SUBNET_ADDRESS="192.168.1.0/24"
+BROADCAST_SRC_ADDRESS="0.0.0.0"
+BROADCAST_DEST_ADDRESS="255.255.255.255"
+
+# port ranges
+USER_PORTS="1024:65535"
+
+# custom chain targets (ACCEPT,DROP)
 ICMP_TARGET="ACCEPT"
 DHCP_TARGET="ACCEPT"
 DNS_TARGET="ACCEPT"
@@ -9,6 +20,15 @@ SSH_SVR_TARGET="ACCEPT"
 SSH_CLNT_TARGET="ACCEPT"
 WWW_SVR_TARGET="ACCEPT"
 WWW_CLNT_TARGET="ACCEPT"
+
+# network interfaces (ifconfig)
+INTERNET="wlan0"
+LOOPBACK="lo"
+
+# DNS configuration
+# DNS server
+DNS_SERVER_ADDRESS="192.168.1.254"
+DNS_SERVER_PORT="53"
 
 # DHCP configuration
 # address of the DHCP server
@@ -18,25 +38,25 @@ DHCP_SERVER="192.168.1.254"
 # allowed local WWW server ports to enable remote access to
 LOCAL_WWW_SERVERS="80"
 # allowed inbound WWW client ports
-INBOUND_WWW_CLIENTS="1024:65535"
+INBOUND_WWW_CLIENTS=$USER_PORTS
 
 # WWW client configuration
 # allowed remote WWW server ports to enable access to
 REMOTE_WWW_SERVERS="80,443"
 # allowed outbound WWW client ports
-OUTBOUND_WWW_CLIENTS="1024:65535"
+OUTBOUND_WWW_CLIENTS=$USER_PORTS
 
 # SSH server configuration
 # allowed local SSH server ports to enable remote access to
 LOCAL_SSH_SERVERS="22"
 # allowed inbound SSH client ports
-INBOUND_SSH_CLIENTS="513:65535"
+INBOUND_SSH_CLIENTS=$USER_PORTS
 
 # SSH client configuration
 # allowed remote SSH server ports to enable access to
 REMOTE_SSH_SERVERS="22"
 # allowed outbound SSH client ports
-OUTBOUND_SSH_CLIENTS="513:65535"
+OUTBOUND_SSH_CLIENTS=$USER_PORTS
 
 echo "### code below - do not touch! ###"
 
@@ -73,29 +93,127 @@ iptables -A INPUT -p icmp -j ICMP
 iptables -A OUTPUT -p icmp -j ICMP
 
 echo "# enable DHCP"
-iptables -A INPUT -p udp -m multiport --dport 67,68 -j DHCP # test
-iptables -A OUTPUT -p udp -m multiport --sport 67,68 -j DHCP # test
+iptables -A OUTPUT -p udp \
+    -s $BROADCAST_SRC_ADDRESS -m multiport --sport 67,68 \
+    -d $BROADCAST_DEST_ADDRESS -m multiport --dport 67,68 \
+    -j DHCP
+iptables -A INPUT -p udp \
+    -s $DHCP_SERVER -m multiport --sport 67 \
+    -d $SUBNET_ADDRESS -m multiport --sport 68 \
+    -j DHCP
+iptables -A OUTPUT -p udp \
+    -s $HOST_ADDRESS -m multiport --sport 68 \
+    -d $DHCP_SERVER -m multiport --dport 67 \
+    -j DHCP
+iptables -A INPUT -p udp \
+    -s $DHCP_SERVER -m multiport --sport 67 \
+    -d $HOST_ADDRESS -m multiport --dport 68 \
+    -j DHCP
 
 echo "# enable remote DNS"
-iptables -A INPUT -p udp -m multiport --sport 53 -j DNS # fixme!
-iptables -A OUTPUT -p udp -m multiport --dport 53 -j DNS # fixme!
+iptables -A INPUT -p udp \
+    -s $DNS_SERVER_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
+    -d $HOST_ADDRESS -m multiport --dport $USER_PORTS \
+     -j DNS
+iptables -A INPUT -p tcp \
+    -s $DNS_SERVER_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
+    -d $HOST_ADDRESS -m multiport --dport $USER_PORTS \
+     -j DNS
+iptables -A OUTPUT -p udp \
+    -s $HOST_ADDRESS -m multiport --sport $USER_PORTS \
+    -d $DNS_SERVER_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
+    -j DNS
+iptables -A OUTPUT -p tcp \
+    -s $HOST_ADDRESS -m multiport --sport $USER_PORTS \
+    -d $DNS_SERVER_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
+    -j DNS
 
-echo "# enable localhost DNS"
-iptables -A INPUT -i lo -p udp -m multiport --dport 53 -j DNS # fixme!
-iptables -A OUTPUT -o lo -p udp -m multiport --sport 53 -j DNS # fixme!
+echo "# enable local DNS"
+iptables -A INPUT -i $LOOPBACK -p udp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
+     -j DNS
+iptables -A INPUT -i $LOOPBACK -p tcp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
+     -j DNS
+iptables -A OUTPUT -o $LOOPBACK -p udp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
+    -j DNS
+iptables -A OUTPUT -o $LOOPBACK -p tcp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
+    -j DNS
 
 echo "# enable SSH server"
-iptables -A INPUT  -p tcp -m multiport --dport $LOCAL_SSH_SERVERS -m multiport --sport $INBOUND_SSH_CLIENTS --tcp-flags NONE NONE -j SSH_SVR
-iptables -A OUTPUT -p tcp -m multiport --sport $LOCAL_SSH_SERVERS -m multiport --dport $INBOUND_SSH_CLIENTS --tcp-flags ACK  ACK  -j SSH_SVR
+iptables -A INPUT -p tcp \
+    -s $ANY_ADDRESS -m multiport --sport $INBOUND_SSH_CLIENTS \
+    -d $HOST_ADDRESS -m multiport --dport $LOCAL_SSH_SERVERS \
+    --tcp-flags NONE NONE -j SSH_SVR
+iptables -A OUTPUT -p tcp \
+    -s $HOST_ADDRESS -m multiport --sport $LOCAL_SSH_SERVERS \
+    -d $ANY_ADDRESS -m multiport --dport $INBOUND_SSH_CLIENTS \
+    --tcp-flags ACK  ACK -j SSH_SVR
+iptables -A INPUT -p tcp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $INBOUND_SSH_CLIENTS \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $LOCAL_SSH_SERVERS \
+    --tcp-flags NONE NONE -j SSH_SVR
+iptables -A OUTPUT -p tcp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $LOCAL_SSH_SERVERS \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $INBOUND_SSH_CLIENTS \
+    --tcp-flags ACK  ACK -j SSH_SVR
 
 echo "# enable SSH client"
-iptables -A INPUT  -p tcp -m multiport --sport $REMOTE_SSH_SERVERS -m multiport --dport $OUTBOUND_SSH_CLIENTS --tcp-flags ACK  ACK  -j SSH_CLNT
-iptables -A OUTPUT -p tcp -m multiport --dport $REMOTE_SSH_SERVERS -m multiport --sport $OUTBOUND_SSH_CLIENTS --tcp-flags NONE NONE -j SSH_CLNT
+iptables -A INPUT -p tcp \
+    -s $ANY_ADDRESS -m multiport --sport $REMOTE_SSH_SERVERS \
+    -d $HOST_ADDRESS -m multiport --dport $OUTBOUND_SSH_CLIENTS \
+    --tcp-flags ACK  ACK -j SSH_CLNT
+iptables -A OUTPUT -p tcp \
+    -s $HOST_ADDRESS -m multiport --sport $OUTBOUND_SSH_CLIENTS \
+    -d $ANY_ADDRESS -m multiport --dport $REMOTE_SSH_SERVERS \
+    --tcp-flags NONE NONE -j SSH_CLNT
+iptables -A INPUT -p tcp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $REMOTE_SSH_SERVERS \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $OUTBOUND_SSH_CLIENTS \
+    --tcp-flags ACK  ACK -j SSH_CLNT
+iptables -A OUTPUT -p tcp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $OUTBOUND_SSH_CLIENTS \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $REMOTE_SSH_SERVERS \
+    --tcp-flags NONE NONE -j SSH_CLNT
 
 echo "# enable WWW server"
-iptables -A INPUT  -p tcp -m multiport --dport $LOCAL_WWW_SERVERS -m multiport --sport $INBOUND_WWW_CLIENTS -j WWW_SVR
-iptables -A OUTPUT -p tcp -m multiport --sport $LOCAL_WWW_SERVERS -m multiport --dport $INBOUND_WWW_CLIENTS -j WWW_SVR
+iptables -A INPUT -p tcp \
+    -s $ANY_ADDRESS -m multiport --sport $INBOUND_WWW_CLIENTS \
+    -d $HOST_ADDRESS -m multiport --dport $LOCAL_WWW_SERVERS \
+    -j WWW_SVR
+iptables -A OUTPUT -p tcp \
+    -s $HOST_ADDRESS -m multiport --sport $LOCAL_WWW_SERVERS \
+    -d $ANY_ADDRESS -m multiport --dport $INBOUND_WWW_CLIENTS \
+    -j WWW_SVR
+iptables -A INPUT -p tcp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $INBOUND_WWW_CLIENTS \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $LOCAL_WWW_SERVERS \
+    -j WWW_SVR
+iptables -A OUTPUT -p tcp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $LOCAL_WWW_SERVERS \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $INBOUND_WWW_CLIENTS \
+    -j WWW_SVR
 
 echo "# enable WWW client"
-iptables -A INPUT  -p tcp -m multiport --sport $REMOTE_WWW_SERVERS -m multiport --dport $OUTBOUND_WWW_CLIENTS -j WWW_CLNT
-iptables -A OUTPUT -p tcp -m multiport --dport $REMOTE_WWW_SERVERS -m multiport --sport $OUTBOUND_WWW_CLIENTS -j WWW_CLNT
+iptables -A INPUT -p tcp \
+    -s $ANY_ADDRESS -m multiport --sport $REMOTE_WWW_SERVERS \
+    -d $HOST_ADDRESS -m multiport --dport $OUTBOUND_WWW_CLIENTS \
+    -j WWW_CLNT
+iptables -A OUTPUT -p tcp \
+    -s $HOST_ADDRESS -m multiport --sport $OUTBOUND_WWW_CLIENTS \
+    -d $ANY_ADDRESS -m multiport --dport $REMOTE_WWW_SERVERS \
+    -j WWW_CLNT
+iptables -A INPUT -p tcp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $REMOTE_WWW_SERVERS \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $OUTBOUND_WWW_CLIENTS \
+    -j WWW_CLNT
+iptables -A OUTPUT -p tcp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $OUTBOUND_WWW_CLIENTS \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $REMOTE_WWW_SERVERS \
+    -j WWW_CLNT
