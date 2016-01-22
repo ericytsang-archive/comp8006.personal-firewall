@@ -50,15 +50,11 @@ iptables -A OUTPUT -o lo -p udp -m multiport --sport 53 -j WWW_CLNT
 iptables -A OUTPUT -p udp -m multiport --dport 53 -j WWW_CLNT
 
 echo "# enable DHCP"
-
 iptables -A INPUT -p udp -m multiport --dport 67,68 -j DHCP # test
-
 iptables -A OUTPUT -p udp -m multiport --sport 67,68 -j DHCP # test
 
 echo "# enable web hosting"
-
 iptables -A INPUT -p tcp -m multiport --dport 80,443 -m multiport --sport 1024:65535 -j WWW_SVR
-
 iptables -A OUTPUT -p tcp -m multiport --sport 80,443 -m multiport --dport 1024:65535 -j WWW_SVR
 
 echo "# enable web browsing"
