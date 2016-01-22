@@ -35,17 +35,9 @@ iptables -P INPUT DROP
 iptables -P OUTPUT DROP
 iptables -P FORWARD DROP
 
-echo "# WWW_CLNT chain"
-iptables -N WWW_CLNT
-iptables -A WWW_CLNT -j ACCEPT
-
-echo "# WWW_SVR chain"
-iptables -N WWW_SVR
-iptables -A WWW_SVR -j ACCEPT
-
-echo "# SSH chain"
-iptables -N SSH
-iptables -A SSH -j ACCEPT
+echo "# ICMP chain"
+iptables -N ICMP
+iptables -A ICMP -j ACCEPT
 
 echo "# DHCP chain"
 iptables -N DHCP
@@ -55,29 +47,33 @@ echo "# DNS chain"
 iptables -N DNS
 iptables -A DNS -j ACCEPT
 
-echo "# enable DNS"
+echo "# SSH chain"
+iptables -N SSH
+iptables -A SSH -j ACCEPT
 
-iptables -A INPUT -i lo -p udp -m multiport --dport 53 -j DNS
-iptables -A INPUT -p udp -m multiport --sport 53 -j DNS
+echo "# WWW_SVR chain"
+iptables -N WWW_SVR
+iptables -A WWW_SVR -j ACCEPT
 
-iptables -A OUTPUT -o lo -p udp -m multiport --sport 53 -j DNS
-iptables -A OUTPUT -p udp -m multiport --dport 53 -j DNS
+echo "# WWW_CLNT chain"
+iptables -N WWW_CLNT
+iptables -A WWW_CLNT -j ACCEPT
+
+echo "# enable ICMP"
+iptables -A INPUT -p icmp -j ICMP
+iptables -A OUTPUT -p icmp -j ICMP
 
 echo "# enable DHCP"
 iptables -A INPUT -p udp -m multiport --dport 67,68 -j DHCP # test
 iptables -A OUTPUT -p udp -m multiport --sport 67,68 -j DHCP # test
 
-echo "# enable ICMP"
-iptables -A INPUT -p icmp -j WWW_CLNT
-iptables -A OUTPUT -p icmp -j WWW_CLNT
+echo "# enable remote DNS"
+iptables -A INPUT -p udp -m multiport --sport 53 -j DNS
+iptables -A OUTPUT -p udp -m multiport --dport 53 -j DNS
 
-echo "# enable web hosting"
-iptables -A INPUT  -p tcp -m multiport --dport $LOCAL_WWW_SERVERS -m multiport --sport $INBOUND_WWW_CLIENTS -j WWW_SVR
-iptables -A OUTPUT -p tcp -m multiport --sport $LOCAL_WWW_SERVERS -m multiport --dport $INBOUND_WWW_CLIENTS -j WWW_SVR
-
-echo "# enable web browsing"
-iptables -A INPUT  -p tcp -m multiport --sport $REMOTE_WWW_SERVERS -m multiport --dport $OUTBOUND_WWW_CLIENTS -j WWW_CLNT
-iptables -A OUTPUT -p tcp -m multiport --dport $REMOTE_WWW_SERVERS -m multiport --sport $OUTBOUND_WWW_CLIENTS -j WWW_CLNT
+echo "# enable localhost DNS"
+iptables -A INPUT -i lo -p udp -m multiport --dport 53 -j DNS
+iptables -A OUTPUT -o lo -p udp -m multiport --sport 53 -j DNS
 
 echo "# enable connections to local SSH server"
 iptables -A INPUT  -p tcp -m multiport --dport $LOCAL_SSH_SERVERS -m multiport --sport $INBOUND_SSH_CLIENTS --tcp-flags NONE NONE -j SSH # test
@@ -86,3 +82,11 @@ iptables -A OUTPUT -p tcp -m multiport --sport $LOCAL_SSH_SERVERS -m multiport -
 echo "# enable connections to remote SSH servers"
 iptables -A INPUT  -p tcp -m multiport --sport $REMOTE_SSH_SERVERS -m multiport --dport $OUTBOUND_SSH_CLIENTS --tcp-flags ALL  ACK  -j SSH # test
 iptables -A OUTPUT -p tcp -m multiport --dport $REMOTE_SSH_SERVERS -m multiport --sport $OUTBOUND_SSH_CLIENTS --tcp-flags NONE NONE -j SSH # test
+
+echo "# enable web hosting"
+iptables -A INPUT  -p tcp -m multiport --dport $LOCAL_WWW_SERVERS -m multiport --sport $INBOUND_WWW_CLIENTS -j WWW_SVR
+iptables -A OUTPUT -p tcp -m multiport --sport $LOCAL_WWW_SERVERS -m multiport --dport $INBOUND_WWW_CLIENTS -j WWW_SVR
+
+echo "# enable web browsing"
+iptables -A INPUT  -p tcp -m multiport --sport $REMOTE_WWW_SERVERS -m multiport --dport $OUTBOUND_WWW_CLIENTS -j WWW_CLNT
+iptables -A OUTPUT -p tcp -m multiport --dport $REMOTE_WWW_SERVERS -m multiport --sport $OUTBOUND_WWW_CLIENTS -j WWW_CLNT
