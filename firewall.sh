@@ -56,7 +56,9 @@ iptables -A OUTPUT -p icmp -j WWW
 echo "# configure chains to accept SSH traffic"
 
 echo "# INPUT chain"
-iptables -A INPUT -p tcp -m multiport --sport 22 -j SSH # test
+iptables -A INPUT -p tcp -m multiport --dport 22 -j SSH # enable connections to local SSH server
+iptables -A INPUT -p tcp -m multiport --sport 22 -j SSH # enable connections to remote SSH servers
 
 echo "# OUTPUT chain"
-iptables -A OUTPUT -p tcp -m multiport --dport 22 -j SSH # test
+iptables -A OUTPUT -p tcp -m multiport --sport 22 -j SSH # enable connections to local SSH server
+iptables -A OUTPUT -p tcp -m multiport --dport 22 -j SSH # enable connections to remote SSH servers
