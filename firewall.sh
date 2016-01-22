@@ -55,12 +55,14 @@ iptables -A OUTPUT -p tcp -m multiport --dport 80,443 -j WWW_CLNT
 iptables -A OUTPUT -p udp -m multiport --dport 53 -j WWW_CLNT
 iptables -A OUTPUT -p icmp -j WWW_CLNT
 
-echo "# configure chains to accept SSH traffic"
+echo "# enable connections to local SSH server"
 
-echo "# INPUT chain"
-iptables -A INPUT -p tcp -m multiport --dport 22 -j SSH # enable connections to local SSH server
-iptables -A INPUT -p tcp -m multiport --sport 22 -j SSH # enable connections to remote SSH servers
+iptables -A INPUT -p tcp -m multiport --dport 22 -j SSH
 
-echo "# OUTPUT chain"
-iptables -A OUTPUT -p tcp -m multiport --sport 22 -j SSH # enable connections to local SSH server
-iptables -A OUTPUT -p tcp -m multiport --dport 22 -j SSH # enable connections to remote SSH servers
+iptables -A OUTPUT -p tcp -m multiport --sport 22 -j SSH
+
+echo "# enable connections to remote SSH servers"
+
+iptables -A INPUT -p tcp -m multiport --sport 22 -j SSH
+
+iptables -A OUTPUT -p tcp -m multiport --dport 22 -j SSH
