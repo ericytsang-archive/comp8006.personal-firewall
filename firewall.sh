@@ -114,11 +114,11 @@ echo "# enable DNS"
 iptables -A INPUT -p udp \
     -s $DNS_SERVER_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
     -d $HOST_ADDRESS -m multiport --dport $USER_PORTS \
-     -j DNS
+    -j DNS
 iptables -A INPUT -p tcp \
     -s $DNS_SERVER_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
     -d $HOST_ADDRESS -m multiport --dport $USER_PORTS \
-     -j DNS
+    -m state --state ESTABLISHED -j DNS
 iptables -A OUTPUT -p udp \
     -s $HOST_ADDRESS -m multiport --sport $USER_PORTS \
     -d $DNS_SERVER_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
@@ -126,76 +126,76 @@ iptables -A OUTPUT -p udp \
 iptables -A OUTPUT -p tcp \
     -s $HOST_ADDRESS -m multiport --sport $USER_PORTS \
     -d $DNS_SERVER_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
-    -j DNS
+    -m state --state NEW,ESTABLISHED -j DNS
 
 echo "# enable SSH server"
 iptables -A INPUT -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $INBOUND_SSH_CLIENTS \
     -d $HOST_ADDRESS -m multiport --dport $LOCAL_SSH_SERVERS \
-    --tcp-flags NONE NONE -j SSH_SVR
+    -m state --state NEW,ESTABLISHED --tcp-flags NONE NONE -j SSH_SVR
 iptables -A OUTPUT -p tcp \
     -s $HOST_ADDRESS -m multiport --sport $LOCAL_SSH_SERVERS \
     -d $ANY_ADDRESS -m multiport --dport $INBOUND_SSH_CLIENTS \
-    --tcp-flags ACK  ACK -j SSH_SVR
+    -m state --state ESTABLISHED --tcp-flags ACK  ACK -j SSH_SVR
 iptables -A INPUT -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $INBOUND_SSH_CLIENTS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $LOCAL_SSH_SERVERS \
-    --tcp-flags NONE NONE -j SSH_SVR
+    -m state --state NEW,ESTABLISHED --tcp-flags NONE NONE -j SSH_SVR
 iptables -A OUTPUT -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $LOCAL_SSH_SERVERS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $INBOUND_SSH_CLIENTS \
-    --tcp-flags ACK  ACK -j SSH_SVR
+    -m state --state ESTABLISHED --tcp-flags ACK  ACK -j SSH_SVR
 
 echo "# enable SSH client"
 iptables -A INPUT -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $REMOTE_SSH_SERVERS \
     -d $HOST_ADDRESS -m multiport --dport $OUTBOUND_SSH_CLIENTS \
-    --tcp-flags ACK  ACK -j SSH_CLNT
+    -m state --state ESTABLISHED --tcp-flags ACK  ACK -j SSH_CLNT
 iptables -A OUTPUT -p tcp \
     -s $HOST_ADDRESS -m multiport --sport $OUTBOUND_SSH_CLIENTS \
     -d $ANY_ADDRESS -m multiport --dport $REMOTE_SSH_SERVERS \
-    --tcp-flags NONE NONE -j SSH_CLNT
+    -m state --state NEW,ESTABLISHED --tcp-flags NONE NONE -j SSH_CLNT
 iptables -A INPUT -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $REMOTE_SSH_SERVERS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $OUTBOUND_SSH_CLIENTS \
-    --tcp-flags ACK  ACK -j SSH_CLNT
+    -m state --state ESTABLISHED --tcp-flags ACK  ACK -j SSH_CLNT
 iptables -A OUTPUT -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $OUTBOUND_SSH_CLIENTS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $REMOTE_SSH_SERVERS \
-    --tcp-flags NONE NONE -j SSH_CLNT
+    -m state --state NEW,ESTABLISHED --tcp-flags NONE NONE -j SSH_CLNT
 
 echo "# enable WWW server"
 iptables -A INPUT -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $INBOUND_WWW_CLIENTS \
     -d $HOST_ADDRESS -m multiport --dport $LOCAL_WWW_SERVERS \
-    -j WWW_SVR
+    -m state --state NEW,ESTABLISHED -j WWW_SVR
 iptables -A OUTPUT -p tcp \
     -s $HOST_ADDRESS -m multiport --sport $LOCAL_WWW_SERVERS \
     -d $ANY_ADDRESS -m multiport --dport $INBOUND_WWW_CLIENTS \
-    -j WWW_SVR
+    -m state --state ESTABLISHED -j WWW_SVR
 iptables -A INPUT -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $INBOUND_WWW_CLIENTS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $LOCAL_WWW_SERVERS \
-    -j WWW_SVR
+    -m state --state NEW,ESTABLISHED -j WWW_SVR
 iptables -A OUTPUT -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $LOCAL_WWW_SERVERS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $INBOUND_WWW_CLIENTS \
-    -j WWW_SVR
+    -m state --state ESTABLISHED -j WWW_SVR
 
 echo "# enable WWW client"
 iptables -A INPUT -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $REMOTE_WWW_SERVERS \
     -d $HOST_ADDRESS -m multiport --dport $OUTBOUND_WWW_CLIENTS \
-    -j WWW_CLNT
+    -m state --state ESTABLISHED -j WWW_CLNT
 iptables -A OUTPUT -p tcp \
     -s $HOST_ADDRESS -m multiport --sport $OUTBOUND_WWW_CLIENTS \
     -d $ANY_ADDRESS -m multiport --dport $REMOTE_WWW_SERVERS \
-    -j WWW_CLNT
+    -m state --state NEW,ESTABLISHED -j WWW_CLNT
 iptables -A INPUT -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $REMOTE_WWW_SERVERS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $OUTBOUND_WWW_CLIENTS \
-    -j WWW_CLNT
+    -m state --state ESTABLISHED -j WWW_CLNT
 iptables -A OUTPUT -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $OUTBOUND_WWW_CLIENTS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $REMOTE_WWW_SERVERS \
-    -j WWW_CLNT
+    -m state --state NEW,ESTABLISHED -j WWW_CLNT
