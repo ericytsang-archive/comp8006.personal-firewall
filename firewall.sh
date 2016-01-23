@@ -1,5 +1,4 @@
-
-echo "### configuration below ###"
+### configuration below ###
 
 # addresses
 ANY_ADDRESS="0.0.0.0/0"
@@ -58,21 +57,21 @@ REMOTE_SSH_SERVERS="22"
 # allowed outbound SSH client ports
 OUTBOUND_SSH_CLIENTS=$USER_PORTS
 
-echo "### code below - do not touch! ###"
+### code below - do not touch! ###
 
-echo "# reset firewall"
+# reset firewall
 iptables -F
 iptables -X
 iptables -P INPUT ACCEPT
 iptables -P OUTPUT ACCEPT
 iptables -P FORWARD ACCEPT
 
-echo "# set chain policies"
+# set chain policies
 iptables -P INPUT DROP
 iptables -P OUTPUT DROP
 iptables -P FORWARD DROP
 
-echo "# create user chains"
+# create user chains
 iptables -N ICMP
 iptables -A ICMP -j $ICMP_TARGET
 iptables -N DHCP
@@ -88,11 +87,11 @@ iptables -A WWW_SVR -j $WWW_SVR_TARGET
 iptables -N WWW_CLNT
 iptables -A WWW_CLNT -j $WWW_CLNT_TARGET
 
-echo "# enable ICMP"
+# enable ICMP
 iptables -A INPUT -p icmp -j ICMP
 iptables -A OUTPUT -p icmp -j ICMP
 
-echo "# enable DHCP"
+# enable DHCP
 iptables -A OUTPUT -p udp \
     -s $BROADCAST_SRC_ADDRESS -m multiport --sport 67,68 \
     -d $BROADCAST_DEST_ADDRESS -m multiport --dport 67,68 \
@@ -110,7 +109,7 @@ iptables -A INPUT -p udp \
     -d $HOST_ADDRESS -m multiport --dport 68 \
     -j DHCP
 
-echo "# enable DNS"
+# enable DNS
 iptables -A INPUT -p udp \
     -s $DNS_SERVER_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
     -d $HOST_ADDRESS -m multiport --dport $USER_PORTS \
@@ -128,7 +127,7 @@ iptables -A OUTPUT -p tcp \
     -d $DNS_SERVER_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
     -m state --state NEW,ESTABLISHED -j DNS
 
-echo "# enable SSH server"
+# enable SSH server
 iptables -A INPUT -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $INBOUND_SSH_CLIENTS \
     -d $HOST_ADDRESS -m multiport --dport $LOCAL_SSH_SERVERS \
@@ -146,7 +145,7 @@ iptables -A OUTPUT -p tcp \
     -d $LOCALHOST_ADDRESS -m multiport --dport $INBOUND_SSH_CLIENTS \
     -m state --state ESTABLISHED --tcp-flags ACK  ACK -j SSH_SVR
 
-echo "# enable SSH client"
+# enable SSH client
 iptables -A INPUT -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $REMOTE_SSH_SERVERS \
     -d $HOST_ADDRESS -m multiport --dport $OUTBOUND_SSH_CLIENTS \
@@ -164,7 +163,7 @@ iptables -A OUTPUT -p tcp \
     -d $LOCALHOST_ADDRESS -m multiport --dport $REMOTE_SSH_SERVERS \
     -m state --state NEW,ESTABLISHED --tcp-flags NONE NONE -j SSH_CLNT
 
-echo "# enable WWW server"
+# enable WWW server
 iptables -A INPUT -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $INBOUND_WWW_CLIENTS \
     -d $HOST_ADDRESS -m multiport --dport $LOCAL_WWW_SERVERS \
@@ -182,7 +181,7 @@ iptables -A OUTPUT -p tcp \
     -d $LOCALHOST_ADDRESS -m multiport --dport $INBOUND_WWW_CLIENTS \
     -m state --state ESTABLISHED -j WWW_SVR
 
-echo "# enable WWW client"
+# enable WWW client
 iptables -A INPUT -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $REMOTE_WWW_SERVERS \
     -d $HOST_ADDRESS -m multiport --dport $OUTBOUND_WWW_CLIENTS \
