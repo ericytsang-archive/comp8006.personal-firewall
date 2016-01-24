@@ -111,14 +111,11 @@ assert_allowed_udp $local_dns_server_address 53
 perform_handshake $local_dns_server_address 53
 
 printf "\n ### testing firewall rules of $address ### \n"
-printf "    NOTE: following tests should be performed on another host on the network.\n"
-printf "    the test should be run with the address of the firewalled host as the test\n"
-printf "    address.\n"
-
-
+printf "        NOTE: following tests should be performed on another host on the network.\n"
+printf "        the test should be run with the address of the firewalled host as the test\n"
+printf "        address.\n"
 perform_handshake $address 22
 perform_handshake $address 80
-perform_handshake $address 443
 
 printf "\n ### testing loop-back firewall rules ### \n"
 perform_handshake $loopback_address 22

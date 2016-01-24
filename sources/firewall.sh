@@ -91,7 +91,9 @@ iptables -N WWW_CLNT
 iptables -A WWW_CLNT -j $WWW_CLNT_TARGET
 
 # enable ICMP
+                                                                            # make a test for me pls
 iptables -A INPUT -p icmp -j ICMP
+                                                                            # make a test for me pls
 iptables -A OUTPUT -p icmp -j ICMP
 
 # enable DHCP
@@ -145,6 +147,7 @@ iptables -A OUTPUT -o $LOOPBACK -p udp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
     -d $LOCAL_DNS_SERVER_ADDRESS -m multiport --dport $LOCAL_DNS_SERVER_PORT \
     -j DNS
+                                                                            # make a test for me pls
 iptables -A INPUT -i $LOOPBACK -p tcp \
     -s $LOCAL_DNS_SERVER_ADDRESS -m multiport --sport $LOCAL_DNS_SERVER_PORT \
     -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
@@ -155,7 +158,6 @@ iptables -A OUTPUT -o $LOOPBACK -p tcp \
     -m state --state NEW,ESTABLISHED -j DNS
 
 # enable loop-back DNS server
-                                                                            # make a test for me pls
 iptables -A INPUT -i $LOOPBACK -p udp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
     -d $LOCAL_DNS_SERVER_ADDRESS -m multiport --dport $LOCAL_DNS_SERVER_PORT \
@@ -165,22 +167,22 @@ iptables -A OUTPUT -o $LOOPBACK -p udp \
     -s $LOCAL_DNS_SERVER_ADDRESS -m multiport --sport $LOCAL_DNS_SERVER_PORT \
     -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
     -j DNS
+                                                                            # make a test for me pls
 iptables -A INPUT -i $LOOPBACK -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
     -d $LOCAL_DNS_SERVER_ADDRESS -m multiport --dport $LOCAL_DNS_SERVER_PORT \
     -m state --state ESTABLISHED -j DNS
+                                                                            # make a test for me pls
 iptables -A OUTPUT -o $LOOPBACK -p tcp \
     -s $LOCAL_DNS_SERVER_ADDRESS -m multiport --sport $LOCAL_DNS_SERVER_PORT \
     -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
     -m state --state NEW,ESTABLISHED -j DNS
 
 # enable SSH server
-                                                                            # make a test for me pls
 iptables -A INPUT -i $INTERNET -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $INBOUND_SSH_CLIENTS \
     -d $HOST_ADDRESS -m multiport --dport $LOCAL_SSH_SERVERS \
     -m state --state NEW,ESTABLISHED --tcp-flags NONE NONE -j SSH_SVR
-                                                                            # make a test for me pls
 iptables -A OUTPUT -o $INTERNET -p tcp \
     -s $HOST_ADDRESS -m multiport --sport $LOCAL_SSH_SERVERS \
     -d $ANY_ADDRESS -m multiport --dport $INBOUND_SSH_CLIENTS \
@@ -213,12 +215,10 @@ iptables -A OUTPUT -o $LOOPBACK -p tcp \
     -m state --state NEW,ESTABLISHED --tcp-flags NONE NONE -j SSH_CLNT
 
 # enable WWW server
-                                                                            # make a test for me pls
 iptables -A INPUT -i $INTERNET -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $INBOUND_WWW_CLIENTS \
     -d $HOST_ADDRESS -m multiport --dport $LOCAL_WWW_SERVERS \
     -m state --state NEW,ESTABLISHED -j WWW_SVR
-                                                                            # make a test for me pls
 iptables -A OUTPUT -o $INTERNET -p tcp \
     -s $HOST_ADDRESS -m multiport --sport $LOCAL_WWW_SERVERS \
     -d $ANY_ADDRESS -m multiport --dport $INBOUND_WWW_CLIENTS \
