@@ -43,6 +43,15 @@ perform_handshake() {
 }
 
 # $1 address to test
+perform_ping() {
+    if ping $1 -c 1 | grep -q '100% packet loss'; then
+        echo "failed: failed to ping $1"
+    else
+        echo "passed: successfully pinged $1"
+    fi
+}
+
+# $1 address to test
 # $2 port to test
 assert_allowed_tcp() {
     if hping3 $1 -c 1 --syn -s 1 -p $2 2>&1 >/dev/null | grep -q 'Operation not permitted'; then
@@ -103,6 +112,9 @@ assert_disallowed_udp() {
 }
 
 # testing
+
+printf "\n ### testing icmp ### \n"
+perform_ping $address
 
 printf "\n ### testing outbound dns ### \n"
 assert_allowed_udp $remote_dns_server_address 53

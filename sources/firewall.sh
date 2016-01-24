@@ -91,9 +91,7 @@ iptables -N WWW_CLNT
 iptables -A WWW_CLNT -j $WWW_CLNT_TARGET
 
 # enable ICMP
-                                                                            # make a test for me pls
 iptables -A INPUT -p icmp -j ICMP
-                                                                            # make a test for me pls
 iptables -A OUTPUT -p icmp -j ICMP
 
 # enable DHCP
