@@ -95,12 +95,10 @@ iptables -A INPUT -p icmp -j ICMP
 iptables -A OUTPUT -p icmp -j ICMP
 
 # enable DHCP
-                                                                            # make a test for me pls
 iptables -A OUTPUT -p udp \
     -s $BROADCAST_SRC_ADDRESS -m multiport --sport 67,68 \
     -d $BROADCAST_DEST_ADDRESS -m multiport --dport 67,68 \
     -j DHCP
-                                                                            # make a test for me pls
 iptables -A INPUT -p udp \
     -s $DHCP_SERVER -m multiport --sport 67 \
     -d $SUBNET_ADDRESS -m multiport --sport 68 \
@@ -109,7 +107,6 @@ iptables -A OUTPUT -p udp \
     -s $HOST_ADDRESS -m multiport --sport 68 \
     -d $DHCP_SERVER -m multiport --dport 67 \
     -j DHCP
-                                                                            # make a test for me pls
 iptables -A INPUT -p udp \
     -s $DHCP_SERVER -m multiport --sport 67 \
     -d $HOST_ADDRESS -m multiport --dport 68 \
@@ -142,7 +139,6 @@ iptables -A OUTPUT -o $LOOPBACK -p udp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
     -d $LOCAL_DNS_SERVER_ADDRESS -m multiport --dport $LOCAL_DNS_SERVER_PORT \
     -j DNS
-                                                                            # make a test for me pls
 iptables -A INPUT -i $LOOPBACK -p tcp \
     -s $LOCAL_DNS_SERVER_ADDRESS -m multiport --sport $LOCAL_DNS_SERVER_PORT \
     -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
@@ -161,12 +157,10 @@ iptables -A OUTPUT -o $LOOPBACK -p udp \
     -s $LOCAL_DNS_SERVER_ADDRESS -m multiport --sport $LOCAL_DNS_SERVER_PORT \
     -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
     -j DNS
-                                                                            # make a test for me pls
 iptables -A INPUT -i $LOOPBACK -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
     -d $LOCAL_DNS_SERVER_ADDRESS -m multiport --dport $LOCAL_DNS_SERVER_PORT \
     -m state --state ESTABLISHED -j DNS
-                                                                            # make a test for me pls
 iptables -A OUTPUT -o $LOOPBACK -p tcp \
     -s $LOCAL_DNS_SERVER_ADDRESS -m multiport --sport $LOCAL_DNS_SERVER_PORT \
     -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
