@@ -110,109 +110,127 @@ iptables -A INPUT -p udp \
     -j DHCP
 
 # enable DNS client
-iptables -A INPUT -p udp \
+iptables -A INPUT -i $INTERNET -p udp \
     -s $ANY_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
-    -d $HOST_ADDRESS,$LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
+    -d $HOST_ADDRESS -m multiport --dport $USER_PORTS \
     -j DNS
-iptables -A OUTPUT -p udp \
-    -s $HOST_ADDRESS,$LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
+iptables -A OUTPUT -o $INTERNET -p udp \
+    -s $HOST_ADDRESS -m multiport --sport $USER_PORTS \
     -d $ANY_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
     -j DNS
-iptables -A INPUT -p tcp \
+iptables -A INPUT -i $INTERNET -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
-    -d $HOST_ADDRESS,$LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
+    -d $HOST_ADDRESS -m multiport --dport $USER_PORTS \
     -m state --state ESTABLISHED -j DNS
-iptables -A OUTPUT -p tcp \
-    -s $HOST_ADDRESS,$LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
+iptables -A OUTPUT -o $INTERNET -p tcp \
+    -s $HOST_ADDRESS -m multiport --sport $USER_PORTS \
     -d $ANY_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
     -m state --state NEW,ESTABLISHED -j DNS
 
-# enable DNS server
+# enable loop-back DNS client
 iptables -A INPUT -i $LOOPBACK -p udp \
-    -m multiport --sport $USER_PORTS \
+    -m multiport --sport $DNS_SERVER_PORT \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
+    -j DNS
+iptables -A OUTPUT -o $LOOPBACK -p udp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
+    -m multiport --dport $DNS_SERVER_PORT \
+    -j DNS
+iptables -A INPUT -i $LOOPBACK -p tcp \
+    -m multiport --sport $DNS_SERVER_PORT \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
+    -m state --state ESTABLISHED -j DNS
+iptables -A OUTPUT -o $LOOPBACK -p tcp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
+    -m multiport --dport $DNS_SERVER_PORT \
+    -m state --state NEW,ESTABLISHED -j DNS
+
+# enable loop-back DNS server
+iptables -A INPUT -i $LOOPBACK -p udp \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
     -m multiport --dport $DNS_SERVER_PORT \
      -j DNS
 iptables -A OUTPUT -o $LOOPBACK -p udp \
     -m multiport --sport $DNS_SERVER_PORT \
-    -m multiport --dport $USER_PORTS \
+    -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
     -j DNS
 iptables -A INPUT -i $LOOPBACK -p tcp \
-    -m multiport --sport $USER_PORTS \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
     -m multiport --dport $DNS_SERVER_PORT \
      -j DNS
 iptables -A OUTPUT -o $LOOPBACK -p tcp \
-    -m multiport --sport $DNS_SERVER_PORT \
+    -s $LOCALHOST_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
     -m multiport --dport $USER_PORTS \
     -j DNS
 
 # enable SSH server
-iptables -A INPUT -p tcp \
+iptables -A INPUT -i $INTERNET -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $INBOUND_SSH_CLIENTS \
     -d $HOST_ADDRESS -m multiport --dport $LOCAL_SSH_SERVERS \
     -m state --state NEW,ESTABLISHED --tcp-flags NONE NONE -j SSH_SVR
-iptables -A OUTPUT -p tcp \
+iptables -A OUTPUT -o $INTERNET -p tcp \
     -s $HOST_ADDRESS -m multiport --sport $LOCAL_SSH_SERVERS \
     -d $ANY_ADDRESS -m multiport --dport $INBOUND_SSH_CLIENTS \
     -m state --state ESTABLISHED --tcp-flags ACK  ACK -j SSH_SVR
-iptables -A INPUT -p tcp \
+iptables -A INPUT -i $LOOPBACK -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $INBOUND_SSH_CLIENTS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $LOCAL_SSH_SERVERS \
     -m state --state NEW,ESTABLISHED --tcp-flags NONE NONE -j SSH_SVR
-iptables -A OUTPUT -p tcp \
+iptables -A OUTPUT -o $LOOPBACK -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $LOCAL_SSH_SERVERS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $INBOUND_SSH_CLIENTS \
     -m state --state ESTABLISHED --tcp-flags ACK  ACK -j SSH_SVR
 
 # enable SSH client
-iptables -A INPUT -p tcp \
+iptables -A INPUT -i $INTERNET -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $REMOTE_SSH_SERVERS \
     -d $HOST_ADDRESS -m multiport --dport $OUTBOUND_SSH_CLIENTS \
     -m state --state ESTABLISHED --tcp-flags ACK  ACK -j SSH_CLNT
-iptables -A OUTPUT -p tcp \
+iptables -A OUTPUT -o $INTERNET -p tcp \
     -s $HOST_ADDRESS -m multiport --sport $OUTBOUND_SSH_CLIENTS \
     -d $ANY_ADDRESS -m multiport --dport $REMOTE_SSH_SERVERS \
     -m state --state NEW,ESTABLISHED --tcp-flags NONE NONE -j SSH_CLNT
-iptables -A INPUT -p tcp \
+iptables -A INPUT -i $LOOPBACK -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $REMOTE_SSH_SERVERS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $OUTBOUND_SSH_CLIENTS \
     -m state --state ESTABLISHED --tcp-flags ACK  ACK -j SSH_CLNT
-iptables -A OUTPUT -p tcp \
+iptables -A OUTPUT -o $LOOPBACK -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $OUTBOUND_SSH_CLIENTS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $REMOTE_SSH_SERVERS \
     -m state --state NEW,ESTABLISHED --tcp-flags NONE NONE -j SSH_CLNT
 
 # enable WWW server
-iptables -A INPUT -p tcp \
+iptables -A INPUT -i $INTERNET -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $INBOUND_WWW_CLIENTS \
     -d $HOST_ADDRESS -m multiport --dport $LOCAL_WWW_SERVERS \
     -m state --state NEW,ESTABLISHED -j WWW_SVR
-iptables -A OUTPUT -p tcp \
+iptables -A OUTPUT -o $INTERNET -p tcp \
     -s $HOST_ADDRESS -m multiport --sport $LOCAL_WWW_SERVERS \
     -d $ANY_ADDRESS -m multiport --dport $INBOUND_WWW_CLIENTS \
     -m state --state ESTABLISHED -j WWW_SVR
-iptables -A INPUT -p tcp \
+iptables -A INPUT -i $LOOPBACK -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $INBOUND_WWW_CLIENTS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $LOCAL_WWW_SERVERS \
     -m state --state NEW,ESTABLISHED -j WWW_SVR
-iptables -A OUTPUT -p tcp \
+iptables -A OUTPUT -o $LOOPBACK -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $LOCAL_WWW_SERVERS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $INBOUND_WWW_CLIENTS \
     -m state --state ESTABLISHED -j WWW_SVR
 
 # enable WWW client
-iptables -A INPUT -p tcp \
+iptables -A INPUT -i $INTERNET -p tcp \
     -s $ANY_ADDRESS -m multiport --sport $REMOTE_WWW_SERVERS \
     -d $HOST_ADDRESS -m multiport --dport $OUTBOUND_WWW_CLIENTS \
     -m state --state ESTABLISHED -j WWW_CLNT
-iptables -A OUTPUT -p tcp \
+iptables -A OUTPUT -o $INTERNET -p tcp \
     -s $HOST_ADDRESS -m multiport --sport $OUTBOUND_WWW_CLIENTS \
     -d $ANY_ADDRESS -m multiport --dport $REMOTE_WWW_SERVERS \
     -m state --state NEW,ESTABLISHED -j WWW_CLNT
-iptables -A INPUT -p tcp \
+iptables -A INPUT -i $LOOPBACK -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $REMOTE_WWW_SERVERS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $OUTBOUND_WWW_CLIENTS \
     -m state --state ESTABLISHED -j WWW_CLNT
-iptables -A OUTPUT -p tcp \
+iptables -A OUTPUT -o $LOOPBACK -p tcp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $OUTBOUND_WWW_CLIENTS \
     -d $LOCALHOST_ADDRESS -m multiport --dport $REMOTE_WWW_SERVERS \
     -m state --state NEW,ESTABLISHED -j WWW_CLNT
