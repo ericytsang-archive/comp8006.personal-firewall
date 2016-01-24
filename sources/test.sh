@@ -54,12 +54,12 @@ perform_ping() {
 # $1 address to test
 # $2 port to test
 assert_allowed_tcp() {
-    if hping3 $1 -c 1 --syn -s 1 -p $2 2>&1 >/dev/null | grep -q 'Operation not permitted'; then
+    if hping3 $1 -c 1 --syn -s 1 -p $2 2>&1 | grep -q 'Operation not permitted'; then
         echo "passed: firewall successfully disallowed sending SYN packets from privileged ports to destination $1:$2"
     else
         echo "failed: firewall failed to disallow sending SYN packets from privileged ports to destination $1:$2"
     fi
-    if hping3 $1 -c 1 --syn      -p $2 2>&1 >/dev/null | grep -q 'Operation not permitted'; then
+    if hping3 $1 -c 1 --syn      -p $2 2>&1 | grep -q 'Operation not permitted'; then
         echo "failed: firewall failed to allow sending SYN packets from non-privileged ports to destination $1:$2"
     else
         echo "passed: firewall successfully allowed sending SYN packets from non-privileged ports to destination $1:$2"
@@ -69,12 +69,12 @@ assert_allowed_tcp() {
 # $1 address to test
 # $2 port to test
 assert_disallowed_tcp() {
-    if hping3 $1 -c 1 --syn -s 1 -p $2 2>&1 >/dev/null | grep -q 'Operation not permitted'; then
+    if hping3 $1 -c 1 --syn -s 1 -p $2 2>&1 | grep -q 'Operation not permitted'; then
         echo "passed: firewall successfully disallowed sending SYN packets from privileged ports to destination $1:$2"
     else
         echo "failed: firewall failed to disallow sending SYN packets from privileged ports to destination $1:$2"
     fi
-    if hping3 $1 -c 1 --syn      -p $2 2>&1 >/dev/null | grep -q 'Operation not permitted'; then
+    if hping3 $1 -c 1 --syn      -p $2 2>&1 | grep -q 'Operation not permitted'; then
         echo "passed: firewall successfully disallowed sending SYN packets from non-privileged ports to destination $1:$2"
     else
         echo "failed: firewall failed to disallow sending SYN packets from non-privileged ports to destination $1:$2"
@@ -84,12 +84,12 @@ assert_disallowed_tcp() {
 # $1 address to test
 # $2 port to test
 assert_allowed_udp() {
-    if hping3 $1 -c 1 --udp -s 1 -p $2 2>&1 >/dev/null | grep -q 'Operation not permitted'; then
+    if hping3 $1 -c 1 --udp -s 1 -p $2 2>&1 | grep -q 'Operation not permitted'; then
         echo "passed: firewall successfully disallowed sending UDP packets from privileged ports to destination $1:$2"
     else
         echo "failed: firewall failed to disallow sending UDP packets from privileged ports to destination $1:$2"
     fi
-    if hping3 $1 -c 1 --udp      -p $2 2>&1 >/dev/null | grep -q 'Operation not permitted'; then
+    if hping3 $1 -c 1 --udp      -p $2 2>&1 | grep -q 'Operation not permitted'; then
         echo "failed: firewall failed to allow sending UDP packets from non-privileged ports to destination $1:$2"
     else
         echo "passed: firewall successfully allowed sending UDP packets from non-privileged ports to destination $1:$2"
@@ -99,12 +99,12 @@ assert_allowed_udp() {
 # $1 address to test
 # $2 port to test
 assert_disallowed_udp() {
-    if hping3 $1 -c 1 --udp -s 1 -p $2 2>&1 >/dev/null | grep -q 'Operation not permitted'; then
+    if hping3 $1 -c 1 --udp -s 1 -p $2 2>&1 | grep -q 'Operation not permitted'; then
         echo "passed: firewall successfully disallowed sending UDP packets from privileged ports to destination $1:$2"
     else
         echo "failed: firewall failed to disallow sending UDP packets from privileged ports to destination $1:$2"
     fi
-    if hping3 $1 -c 1 --udp      -p $2 2>&1 >/dev/null | grep -q 'Operation not permitted'; then
+    if hping3 $1 -c 1 --udp      -p $2 2>&1 | grep -q 'Operation not permitted'; then
         echo "passed: firewall successfully disallowed sending UDP packets from non-privileged ports to destination $1:$2"
     else
         echo "failed: firewall failed to disallow sending UDP packets from non-privileged ports to destination $1:$2"
@@ -112,6 +112,14 @@ assert_disallowed_udp() {
 }
 
 # testing
+
+printf "\n ### testing dhcp ### \n"
+if dhclient -v -r 2>&1 | grep -q 'Operation not permitted'; then
+    echo "failed: firewall disallowed DHCP; failed to release address"
+else
+    echo "passed: firewall allowed DHCP"
+fi
+dhclient
 
 printf "\n ### testing icmp ### \n"
 perform_ping $address

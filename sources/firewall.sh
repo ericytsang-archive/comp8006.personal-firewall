@@ -105,7 +105,6 @@ iptables -A INPUT -p udp \
     -s $DHCP_SERVER -m multiport --sport 67 \
     -d $SUBNET_ADDRESS -m multiport --sport 68 \
     -j DHCP
-                                                                            # make a test for me pls
 iptables -A OUTPUT -p udp \
     -s $HOST_ADDRESS -m multiport --sport 68 \
     -d $DHCP_SERVER -m multiport --dport 67 \
@@ -117,7 +116,6 @@ iptables -A INPUT -p udp \
     -j DHCP
 
 # enable DNS client
-                                                                            # make a test for me pls
 iptables -A INPUT -i $INTERNET -p udp \
     -s $REMOTE_DNS_SERVER_ADDRESS -m multiport --sport $REMOTE_DNS_SERVER_PORT \
     -d $HOST_ADDRESS -m multiport --dport $USER_PORTS \
@@ -136,7 +134,6 @@ iptables -A OUTPUT -o $INTERNET -p tcp \
     -m state --state NEW,ESTABLISHED -j DNS
 
 # enable loop-back DNS client
-                                                                            # make a test for me pls
 iptables -A INPUT -i $LOOPBACK -p udp \
     -s $LOCAL_DNS_SERVER_ADDRESS -m multiport --sport $LOCAL_DNS_SERVER_PORT \
     -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
@@ -160,7 +157,6 @@ iptables -A INPUT -i $LOOPBACK -p udp \
     -s $LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
     -d $LOCAL_DNS_SERVER_ADDRESS -m multiport --dport $LOCAL_DNS_SERVER_PORT \
     -j DNS
-                                                                            # make a test for me pls
 iptables -A OUTPUT -o $LOOPBACK -p udp \
     -s $LOCAL_DNS_SERVER_ADDRESS -m multiport --sport $LOCAL_DNS_SERVER_PORT \
     -d $LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
