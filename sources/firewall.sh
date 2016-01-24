@@ -109,23 +109,41 @@ iptables -A INPUT -p udp \
     -d $HOST_ADDRESS -m multiport --dport 68 \
     -j DHCP
 
-# enable DNS
+# enable DNS client
 iptables -A INPUT -p udp \
-    -s $DNS_SERVER_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
-    -d $HOST_ADDRESS -m multiport --dport $USER_PORTS \
+    -s $ANY_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
+    -d $HOST_ADDRESS,$LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
+    -j DNS
+iptables -A OUTPUT -p udp \
+    -s $HOST_ADDRESS,$LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
+    -d $ANY_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
     -j DNS
 iptables -A INPUT -p tcp \
-    -s $DNS_SERVER_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
-    -d $HOST_ADDRESS -m multiport --dport $USER_PORTS \
+    -s $ANY_ADDRESS -m multiport --sport $DNS_SERVER_PORT \
+    -d $HOST_ADDRESS,$LOCALHOST_ADDRESS -m multiport --dport $USER_PORTS \
     -m state --state ESTABLISHED -j DNS
-iptables -A OUTPUT -p udp \
-    -s $HOST_ADDRESS -m multiport --sport $USER_PORTS \
-    -d $DNS_SERVER_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
-    -j DNS
 iptables -A OUTPUT -p tcp \
-    -s $HOST_ADDRESS -m multiport --sport $USER_PORTS \
-    -d $DNS_SERVER_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
+    -s $HOST_ADDRESS,$LOCALHOST_ADDRESS -m multiport --sport $USER_PORTS \
+    -d $ANY_ADDRESS -m multiport --dport $DNS_SERVER_PORT \
     -m state --state NEW,ESTABLISHED -j DNS
+
+# enable DNS server
+iptables -A INPUT -i $LOOPBACK -p udp \
+    -m multiport --sport $USER_PORTS \
+    -m multiport --dport $DNS_SERVER_PORT \
+     -j DNS
+iptables -A OUTPUT -o $LOOPBACK -p udp \
+    -m multiport --sport $DNS_SERVER_PORT \
+    -m multiport --dport $USER_PORTS \
+    -j DNS
+iptables -A INPUT -i $LOOPBACK -p tcp \
+    -m multiport --sport $USER_PORTS \
+    -m multiport --dport $DNS_SERVER_PORT \
+     -j DNS
+iptables -A OUTPUT -o $LOOPBACK -p tcp \
+    -m multiport --sport $DNS_SERVER_PORT \
+    -m multiport --dport $USER_PORTS \
+    -j DNS
 
 # enable SSH server
 iptables -A INPUT -p tcp \
