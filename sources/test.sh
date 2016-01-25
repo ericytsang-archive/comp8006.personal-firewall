@@ -11,10 +11,10 @@ fi
 pass=0
 fail=1
 
-remote_dns_server_address="192.168.1.254"
+remote_dns_server_address="142.232.191.38"
 local_dns_server_address="127.0.1.1"
 loopback_address="127.0.0.1"
-some_address="192.168.1.1"
+some_address="8.8.8.8"
 
 # $1 assertion value
 # $2 success message
